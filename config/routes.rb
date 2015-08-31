@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
-  devise_for :users
+  # Easier to make GET request from the client
+  devise_for :users, sign_out_via: [:get, :delete]
 
   root 'home#index'
 
