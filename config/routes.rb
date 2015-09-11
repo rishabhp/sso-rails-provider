@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   # Easier to make GET request from the client
-  devise_for :users, sign_out_via: [:get, :delete]
+  devise_for :users, sign_out_via: [:get, :delete],
+              controllers: { omniauth_callbacks: 'callbacks' }
 
   root 'home#index'
 
