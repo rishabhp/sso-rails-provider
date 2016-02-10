@@ -1,0 +1,74 @@
+- name: send key to remote deploy user
+  copy: src=~/.ssh dest=/home/vagrant/
+
+- name: copy git-completion help script
+  copy: src=bash_profile.j2 dest=/home/vagrant/.bash_profile
+  
+- name: send gitconfig so git commands are ran as local user and not vagrant user
+  copy: src=~/.gitconfig dest=/home/vagrant/
+
+- name: install ruby dependencies
+  action: apt pkg={{item}} state=installed
+  with_items:
+    - build-essential
+    - automake
+    - bison
+    - autoconf
+    - pkg-config
+    - libreadline6
+    - libreadline6-dev
+    - openssl
+    - libssl-dev
+    - curl
+    - git-core
+    - zlib1g
+    - zlib1g-dev
+    - libyaml-dev
+    - libsqlite3-dev
+    - libxml2-dev
+    - libxslt1-dev
+    - curl
+    - libcurl3-dev
+    - libffi-dev
+    - nodejs
+    - libmysqlclient-dev
+
+- name: Install app dependencies
+  action: apt pkg={{item}} state=installed
+  with_items:
+    - mysql-client
+  tags: package
+
+# Install correct version of ruby from source
+
+- stat: path=/usr/local/bin/ruby
+  register: ruby_installed
+   
+- name: ruby-from-src | ensure directory temporary ruby download directory is present
+  file: state=directory path={{rubyTmpDir}}
+  when: ruby_installed.stat.exists == False
+
+- name: ruby-from-src | Download ruby source
+  get_url: url={{rubyUrl}} dest={{rubyTmpDir}}
+  when: ruby_installed.stat.exists == False
+
+- name: ruby-from-src | ensure ruby is extracted
+  command: tar -xf {{rubyCompressedFile}} chdir={{rubyTmpDir}} creates={{tmpRubyPath}}
+  when: ruby_installed.stat.exists == False
+
+- name: ruby-from-src | ensure ruby is configured
+  command: ./configure chdir={{tmpRubyPath}} creates={{tmpRubyPath}}/Makefile
+  when: ruby_installed.stat.exists == False
+
+- name: ruby-from-src | ensure ruby is compiled
+  command: make chdir={{tmpRubyPath}} creates={{tmpRubyPath}}/ruby
+  when: ruby_installed.stat.exists == False
+
+- name: ruby-from-src | ensure ruby is installed
+  command: make install chdir={{tmpRubyPath}} creates=/usr/local/bin/ruby
+  when: ruby_installed.stat.exists == False
+
+- name: Install Bundler
+  command: gem install bundler -v '1.7.1'
+  
+  

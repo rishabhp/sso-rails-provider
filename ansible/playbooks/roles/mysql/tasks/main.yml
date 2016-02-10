@@ -1,0 +1,32 @@
+  - name: install python-mysqldb
+    action: apt pkg=python-mysqldb state=installed
+  
+  - name: install mysql-server
+    action: apt name=mysql-server state=installed
+  
+  - name: MySQL | Config for utf8 and bind-address change
+    action: template src=my.cnf.j2 dest=/etc/mysql/my.cnf
+  
+  - name: service mysql
+    action: service name=mysql state=started
+  
+  - name: update mysql root password for all root accounts
+    sudo: yes
+    mysql_user: 
+      name: root 
+      host: "%" 
+      password: "s8ajaStE"
+      login_user: root
+      login_password: "s8ajaStE"
+      check_implicit_admin: yes
+      priv: "*.*:ALL,GRANT"
+    notify: restart mysql
+
+  # I'm keeping this in as an example of how to use lineinfile
+  # - name: Ensure MySQL will listen on all ip interfaces (bind to 0.0.0.0)
+  #   lineinfile: dest=/etc/mysql/my.cnf
+  #     regexp='bind-address\s*=\s*127\.0\.0\.1\s*'
+  #     line='bind-address   = 0.0.0.0'
+  #     state=present
+  #     backrefs=yes
+  #   notify: restart mysql
